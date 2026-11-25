@@ -1,0 +1,1277 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIA | Gestão de Almoxarifado</title>
+
+<style>
+:root {
+    --azul: #102a43;
+    --azul2: #174a78;
+    --fundo: #f1f5f9;
+    --borda: #dce4ee;
+    --verde: #16805d;
+    --vermelho: #c03945;
+    --texto: #25364a;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: var(--fundo);
+    color: var(--texto);
+}
+
+header {
+    background: var(--azul);
+    color: white;
+    padding: 23px 5%;
+}
+
+header h1 { margin: 0; font-size: 25px; }
+header p { margin: 7px 0 0; opacity: .8; }
+
+nav {
+    background: white;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 5%;
+    border-bottom: 1px solid var(--borda);
+}
+
+nav button {
+    background: transparent;
+    color: var(--azul);
+    border: none;
+    padding: 12px 16px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 7px;
+}
+
+nav button.ativo {
+    background: var(--azul);
+    color: white;
+}
+
+main {
+    max-width: 1250px;
+    margin: auto;
+    padding: 22px;
+}
+
+.aba { display: none; }
+.aba.ativa { display: block; }
+
+.painel, .card {
+    background: white;
+    padding: 22px;
+    border-radius: 12px;
+    margin-bottom: 18px;
+    box-shadow: 0 2px 10px #102a4310;
+}
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 15px;
+}
+
+.card small {
+    color: #64748b;
+    font-weight: bold;
+}
+
+.card strong {
+    display: block;
+    font-size: 30px;
+    color: var(--azul);
+    margin-top: 10px;
+}
+
+h2 { margin-top: 0; font-size: 21px; }
+h3 { margin-top: 0; }
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 6px;
+}
+
+input, select, textarea {
+    width: 100%;
+    padding: 11px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    font: inherit;
+    background: white;
+}
+
+textarea { resize: vertical; }
+
+button {
+    cursor: pointer;
+    border: none;
+    padding: 11px 16px;
+    border-radius: 7px;
+    font-weight: bold;
+    background: var(--azul2);
+    color: white;
+}
+
+button:hover { opacity: .88; }
+
+.btn-verde { background: var(--verde); }
+.btn-vermelho { background: var(--vermelho); }
+.btn-cinza { background: #64748b; }
+
+.acoes { margin-top: 18px; }
+
+.tabela {
+    overflow-x: auto;
+    margin-top: 16px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 850px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--borda);
+    font-size: 13px;
+}
+
+th {
+    background: #eaf0f7;
+    color: var(--azul);
+}
+
+tr:hover td { background: #f8fafc; }
+
+.status {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.ok { background: #dcfce7; color: #166534; }
+.baixo { background: #fef3c7; color: #92400e; }
+.zerado { background: #fee2e2; color: #991b1b; }
+
+.aviso {
+    padding: 13px;
+    background: #fff7df;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 13px;
+}
+
+.linha {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.linha input { max-width: 370px; }
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #64748b;
+    font-size: 12px;
+}
+
+@media(max-width: 600px) {
+    main { padding: 12px; }
+    header { padding: 20px; }
+    nav { padding: 10px; }
+    nav button { flex: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>📦 N&A | Gestão de Almoxarifado</h1>
+    <p>Controle de estoque, obras, ferramentas e movimentações</p>
+</header>
+
+<nav>
+    <button class="ativo" onclick="abrirAba('estoque',this)">Estoque</button>
+    <button onclick="abrirAba('saidas',this)">Saídas / Obras</button>
+    <button onclick="abrirAba('retornos',this)">Retornos</button>
+    <button onclick="abrirAba('historico',this)">Histórico</button>
+    <button onclick="abrirAba('cadastro',this)">Cadastros</button>
+</nav>
+
+<main>
+
+<section id="estoque" class="aba ativa">
+    <h2>Visão Geral do Almoxarifado</h2>
+
+    <div class="cards">
+        <div class="card">
+            <small>PRODUTOS CADASTRADOS</small>
+            <strong id="totalProdutos">0</strong>
+        </div>
+        <div class="card">
+            <small>ESTOQUE BAIXO</small>
+            <strong id="totalBaixo">0</strong>
+        </div>
+        <div class="card">
+            <small>PRODUTOS ZERADOS</small>
+            <strong id="totalZerado">0</strong>
+        </div>
+        <div class="card">
+            <small>MOVIMENTAÇÕES</small>
+            <strong id="totalMov">0</strong>
+        </div>
+    </div>
+
+    <div class="painel">
+        <h2>Estoque Atual</h2>
+
+        <div class="linha">
+            <input id="pesquisaEstoque"
+                placeholder="Pesquisar código ou material..."
+                oninput="renderizar()">
+            <button onclick="exportarEstoque()">Exportar Excel (CSV)</button>
+        </div>
+
+        <div class="tabela">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Produto / Ferramenta</th>
+                        <th>Tipo</th>
+                        <th>Unidade</th>
+                        <th>Ideal</th>
+                        <th>Atual</th>
+                        <th>Entradas</th>
+                        <th>Saídas</th>
+                        <th>Retornos</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaEstoque"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section id="saidas" class="aba">
+    <div class="painel">
+        <h2>Registrar Saída para Obra</h2>
+
+        <form id="formSaida">
+            <div class="grid">
+                <div>
+                    <label>Obra / Destino *</label>
+                    <select id="saidaObra" required></select>
+                </div>
+                <div>
+                    <label>Material / Ferramenta *</label>
+                    <select id="saidaProduto" required></select>
+                </div>
+                <div>
+                    <label>Quantidade *</label>
+                    <input id="saidaQtd" type="number"
+                        min="0.0001" step="any" required>
+                </div>
+                <div>
+                    <label>Responsável / Terceirizado *</label>
+                    <input id="saidaResponsavel" required>
+                </div>
+                <div>
+                    <label>Data *</label>
+                    <input id="saidaData" type="date" required>
+                </div>
+                <div>
+                    <label>Hora *</label>
+                    <input id="saidaHora" type="time" required>
+                </div>
+                <div>
+                    <label>Operação</label>
+                    <select id="saidaOperacao">
+                        <option value="Saída para obra">Saída para obra</option>
+                        <option value="Empréstimo de ferramenta">Empréstimo de ferramenta</option>
+                        <option value="Transferência">Transferência</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Documento / OS</label>
+                    <input id="saidaDocumento" placeholder="Opcional">
+                </div>
+            </div>
+
+            <div style="margin-top:12px">
+                <label>Observações</label>
+                <textarea id="saidaObs" rows="2"></textarea>
+            </div>
+
+            <div class="acoes">
+                <button type="submit" class="btn-verde">
+                    Registrar Saída
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="painel">
+        <h2>Materiais Pendentes de Retorno</h2>
+        <div class="tabela">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Obra</th>
+                        <th>Material</th>
+                        <th>Responsável</th>
+                        <th>Quantidade Pendente</th>
+                        <th>Unidade</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaPendencias"></tbody>
+            </table>
+        </div>
+        <p style="font-size:12px;color:#64748b">
+            A tabela mostra saídas ainda não totalmente devolvidas.
+            Materiais consumidos podem permanecer como saída definitiva.
+        </p>
+    </div>
+</section>
+
+<section id="retornos" class="aba">
+    <div class="painel">
+        <h2>Registrar Retorno de Material</h2>
+
+        <form id="formRetorno">
+            <div class="grid">
+                <div>
+                    <label>Saída / Obra de Origem *</label>
+                    <select id="retornoSaida" required
+                        onchange="mostrarPendente()"></select>
+                </div>
+                <div>
+                    <label>Quantidade a devolver *</label>
+                    <input id="retornoQtd" type="number"
+                        min="0.0001" step="any" required>
+                </div>
+                <div>
+                    <label>Operação *</label>
+                    <select id="retornoOperacao">
+                        <option value="Devolução">Devolução</option>
+                        <option value="Retorno parcial">Retorno parcial</option>
+                        <option value="Retorno de ferramenta">Retorno de ferramenta</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Responsável / Terceirizado *</label>
+                    <input id="retornoResponsavel" required>
+                </div>
+                <div>
+                    <label>Data *</label>
+                    <input id="retornoData" type="date" required>
+                </div>
+                <div>
+                    <label>Hora *</label>
+                    <input id="retornoHora" type="time" required>
+                </div>
+            </div>
+
+            <p id="infoPendente" class="aviso">
+                Selecione uma saída para consultar o saldo pendente.
+            </p>
+
+            <label>Observações</label>
+            <textarea id="retornoObs" rows="2"
+                placeholder="Estado do material, avarias, observações..."></textarea>
+
+            <div class="acoes">
+                <button type="submit" class="btn-verde">
+                    Confirmar Retorno
+                </button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section id="historico" class="aba">
+    <div class="painel">
+        <h2>Histórico de Movimentações</h2>
+
+        <div class="linha">
+            <input id="pesquisaHistorico"
+                placeholder="Pesquisar obra, material ou responsável..."
+                oninput="renderizar()">
+            <button onclick="exportarHistorico()">Exportar Histórico CSV</button>
+        </div>
+
+        <div class="tabela">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Hora</th>
+                        <th>Operação</th>
+                        <th>Obra / Destino</th>
+                        <th>Material</th>
+                        <th>Quantidade</th>
+                        <th>Unidade</th>
+                        <th>Responsável</th>
+                        <th>Observações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaHistorico"></tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+<section id="cadastro" class="aba">
+    <div class="painel">
+        <h2>Cadastrar Material / Ferramenta</h2>
+
+        <form id="formProduto">
+            <div class="grid">
+                <div>
+                    <label>Código *</label>
+                    <input id="cadCodigo" required placeholder="MAT001">
+                </div>
+                <div>
+                    <label>Descrição *</label>
+                    <input id="cadNome" required>
+                </div>
+                <div>
+                    <label>Tipo *</label>
+                    <select id="cadTipo">
+                        <option>Material</option>
+                        <option>Ferramenta</option>
+                        <option>Equipamento</option>
+                        <option>EPI</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Unidade *</label>
+                    <select id="cadUnidade">
+                        <option>UN</option>
+                        <option>M</option>
+                        <option>KG</option>
+                        <option>L</option>
+                        <option>CX</option>
+                        <option>PAR</option>
+                        <option>ROLO</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Quantidade Atual *</label>
+                    <input id="cadAtual" type="number"
+                        min="0" step="any" value="0" required>
+                </div>
+                <div>
+                    <label>Quantidade Ideal *</label>
+                    <input id="cadIdeal" type="number"
+                        min="0" step="any" value="0" required>
+                </div>
+                <div>
+                    <label>Localização</label>
+                    <input id="cadLocal" placeholder="Prateleira / Setor">
+                </div>
+            </div>
+
+            <div class="acoes">
+                <button type="submit" class="btn-verde">
+                    Salvar Cadastro
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="painel">
+        <h2>Cadastrar Obra / Destino</h2>
+        <form id="formObra">
+            <div class="grid">
+                <div>
+                    <label>Nome da Obra *</label>
+                    <input id="cadObra" required
+                        placeholder="Ex.: LFF Comercial">
+                </div>
+                <div>
+                    <label>Localidade</label>
+                    <input id="cadCidade"
+                        placeholder="Ex.: Riacho dos Cavalos - PB">
+                </div>
+            </div>
+            <div class="acoes">
+                <button type="submit">Cadastrar Obra</button>
+            </div>
+        </form>
+
+        <div class="tabela">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Obra / Destino</th>
+                        <th>Localidade</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaObras"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="painel">
+        <h2>Entrada de Material / Ajuste de Inventário</h2>
+        <form id="formEntrada">
+            <div class="grid">
+                <div>
+                    <label>Produto *</label>
+                    <select id="entradaProduto" required></select>
+                </div>
+                <div>
+                    <label>Operação *</label>
+                    <select id="entradaOperacao">
+                        <option value="Entrada">Entrada de material</option>
+                        <option value="Ajuste de inventário">Ajuste de inventário</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Quantidade *</label>
+                    <input id="entradaQtd" type="number"
+                        min="0" step="any" required>
+                </div>
+                <div>
+                    <label>Responsável *</label>
+                    <input id="entradaResponsavel" required>
+                </div>
+                <div>
+                    <label>Data *</label>
+                    <input id="entradaData" type="date" required>
+                </div>
+                <div>
+                    <label>Hora *</label>
+                    <input id="entradaHora" type="time" required>
+                </div>
+            </div>
+            <p class="aviso">
+                Na entrada, a quantidade é somada ao estoque.
+                No ajuste de inventário, informe a quantidade final
+                encontrada na conferência.
+            </p>
+            <div class="acoes">
+                <button type="submit" class="btn-verde">
+                    Registrar Operação
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="painel">
+        <h2>Backup dos Registros</h2>
+        <button onclick="baixarBackup()">Baixar Backup JSON</button>
+
+        <label style="margin-top:15px">
+            Restaurar Backup
+        </label>
+        <input type="file" id="arquivoBackup"
+            accept=".json,application/json"
+            onchange="restaurarBackup(event)">
+
+        <p class="aviso">
+            Esta versão salva os dados no navegador deste dispositivo.
+            O GitHub Pages publica o sistema, mas não sincroniza os
+            registros entre computadores. Para uso compartilhado
+            pela empresa, será necessário integrar um banco de dados
+            online com autenticação e permissões.
+        </p>
+    </div>
+</section>
+
+</main>
+
+<footer>
+    NIA | Gestão de Almoxarifado — Protótipo 1.0
+</footer>
+
+<script>
+"use strict";
+
+const CHAVE = "nia_almoxarifado_teste_v1";
+const $ = id => document.getElementById(id);
+
+let banco = carregar();
+
+function bancoVazio() {
+    return {
+        produtos: [],
+        obras: [],
+        saidas: [],
+        historico: []
+    };
+}
+
+function carregar() {
+    try {
+        const salvo = localStorage.getItem(CHAVE);
+        if (!salvo) return bancoVazio();
+
+        const dados = JSON.parse(salvo);
+
+        if (
+            !dados ||
+            !Array.isArray(dados.produtos) ||
+            !Array.isArray(dados.obras) ||
+            !Array.isArray(dados.saidas) ||
+            !Array.isArray(dados.historico)
+        ) {
+            return bancoVazio();
+        }
+
+        return dados;
+    } catch {
+        return bancoVazio();
+    }
+}
+
+function salvar() {
+    try {
+        localStorage.setItem(CHAVE, JSON.stringify(banco));
+        return true;
+    } catch {
+        alert("Erro ao salvar. Verifique o armazenamento.");
+        return false;
+    }
+}
+
+function confirmarAlteracao() {
+    if (!salvar()) return false;
+    renderizar();
+    return true;
+}
+
+function numero(valor) {
+    return Number(valor).toLocaleString("pt-BR", {
+        maximumFractionDigits: 4
+    });
+}
+
+function dataAtual() {
+    const agora = new Date();
+    const local = new Date(
+        agora.getTime() - agora.getTimezoneOffset() * 60000
+    );
+    return local.toISOString().slice(0, 10);
+}
+
+function horaAtual() {
+    const agora = new Date();
+    return agora.toTimeString().slice(0, 5);
+}
+
+function preencherDatas() {
+    ["saidaData", "retornoData", "entradaData"].forEach(id => {
+        $(id).value = dataAtual();
+    });
+
+    ["saidaHora", "retornoHora", "entradaHora"].forEach(id => {
+        $(id).value = horaAtual();
+    });
+}
+
+function abrirAba(id, botao) {
+    document.querySelectorAll(".aba").forEach(aba => {
+        aba.classList.remove("ativa");
+    });
+
+    document.querySelectorAll("nav button").forEach(b => {
+        b.classList.remove("ativo");
+    });
+
+    $(id).classList.add("ativa");
+    botao.classList.add("ativo");
+    renderizar();
+}
+
+function celula(linha, valor) {
+    const td = linha.insertCell();
+    td.textContent = String(valor ?? "");
+    return td;
+}
+
+function criarOpcao(select, valor, texto) {
+    const opcao = document.createElement("option");
+    opcao.value = valor;
+    opcao.textContent = texto;
+    select.appendChild(opcao);
+}
+
+function preencherSelect(id, itens, texto) {
+    const select = $(id);
+    const anterior = select.value;
+
+    select.replaceChildren();
+    criarOpcao(select, "", "Selecione...");
+
+    itens.forEach(item => {
+        criarOpcao(select, item.id, texto(item));
+    });
+
+    if (itens.some(item => item.id === anterior)) {
+        select.value = anterior;
+    }
+}
+
+function produtoPorId(id) {
+    return banco.produtos.find(p => p.id === id);
+}
+
+function obraPorId(id) {
+    return banco.obras.find(o => o.id === id);
+}
+
+function gerarId() {
+    return crypto.randomUUID();
+}
+
+function registrarHistorico(dados) {
+    banco.historico.push({
+        id: gerarId(),
+        ...dados
+    });
+}
+
+function renderizar() {
+    $("totalProdutos").textContent = banco.produtos.length;
+
+    $("totalBaixo").textContent = banco.produtos.filter(
+        p => p.atual > 0 && p.atual < p.ideal
+    ).length;
+
+    $("totalZerado").textContent = banco.produtos.filter(
+        p => p.atual === 0
+    ).length;
+
+    $("totalMov").textContent = banco.historico.length;
+
+    const busca = $("pesquisaEstoque").value.toLowerCase();
+    $("tabelaEstoque").replaceChildren();
+
+    banco.produtos.filter(p =>
+        (p.codigo + " " + p.nome).toLowerCase().includes(busca)
+    ).forEach(p => {
+        const linha = $("tabelaEstoque").insertRow();
+
+        [
+            p.codigo,
+            p.nome,
+            p.tipo,
+            p.unidade,
+            numero(p.ideal),
+            numero(p.atual),
+            numero(p.entradas),
+            numero(p.saidas),
+            numero(p.retornos)
+        ].forEach(v => celula(linha, v));
+
+        let status = "Normal";
+        let classe = "ok";
+
+        if (p.atual === 0) {
+            status = "Zerado";
+            classe = "zerado";
+        } else if (p.atual < p.ideal) {
+            status = "Abaixo do ideal";
+            classe = "baixo";
+        }
+
+        const td = linha.insertCell();
+        const span = document.createElement("span");
+        span.textContent = status;
+        span.className = "status " + classe;
+        td.appendChild(span);
+    });
+
+    const produtosSelect = banco.produtos.map(p => ({
+        id: p.id,
+        codigo: p.codigo,
+        nome: p.nome,
+        unidade: p.unidade
+    }));
+
+    preencherSelect(
+        "saidaProduto",
+        produtosSelect,
+        p => p.codigo + " - " + p.nome + " (" + p.unidade + ")"
+    );
+
+    preencherSelect(
+        "entradaProduto",
+        produtosSelect,
+        p => p.codigo + " - " + p.nome
+    );
+
+    preencherSelect(
+        "saidaObra",
+        banco.obras,
+        o => o.nome + " - " + o.cidade
+    );
+
+    $("tabelaObras").replaceChildren();
+
+    banco.obras.forEach(o => {
+        const linha = $("tabelaObras").insertRow();
+        celula(linha, o.nome);
+        celula(linha, o.cidade);
+    });
+
+    const pendentes = banco.saidas.filter(
+        s => s.pendente > 0
+    );
+
+    $("tabelaPendencias").replaceChildren();
+
+    pendentes.forEach(s => {
+        const p = produtoPorId(s.produtoId);
+        const o = obraPorId(s.obraId);
+        const linha = $("tabelaPendencias").insertRow();
+
+        [
+            s.data,
+            o ? o.nome : s.obraNome,
+            p ? p.nome : s.produtoNome,
+            s.responsavel,
+            numero(s.pendente),
+            s.unidade
+        ].forEach(v => celula(linha, v));
+    });
+
+    preencherSelect(
+        "retornoSaida",
+        pendentes,
+        s => {
+            const p = produtoPorId(s.produtoId);
+            const o = obraPorId(s.obraId);
+
+            return (
+                (o ? o.nome : s.obraNome) + " | " +
+                (p ? p.nome : s.produtoNome) +
+                " | Pendente: " + numero(s.pendente) +
+                " " + s.unidade
+            );
+        }
+    );
+
+    mostrarPendente();
+
+    const filtro = $("pesquisaHistorico").value.toLowerCase();
+
+    $("tabelaHistorico").replaceChildren();
+
+    [...banco.historico].reverse()
+    .filter(h =>
+        Object.values(h).join(" ").toLowerCase().includes(filtro)
+    )
+    .forEach(h => {
+        const linha = $("tabelaHistorico").insertRow();
+
+        [
+            h.data,
+            h.hora,
+            h.operacao,
+            h.obra,
+            h.produto,
+            numero(h.quantidade),
+            h.unidade,
+            h.responsavel,
+            h.observacao
+        ].forEach(v => celula(linha, v));
+    });
+}
+
+function mostrarPendente() {
+    const saida = banco.saidas.find(
+        s => s.id === $("retornoSaida").value
+    );
+
+    $("infoPendente").textContent = saida
+        ? "Quantidade pendente: " +
+          numero(saida.pendente) + " " + saida.unidade
+        : "Selecione uma saída para consultar o saldo pendente.";
+}
+
+$("formProduto").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const codigo = $("cadCodigo").value.trim().toUpperCase();
+    const nome = $("cadNome").value.trim();
+    const atual = Number($("cadAtual").value);
+    const ideal = Number($("cadIdeal").value);
+
+    if (
+        !codigo || !nome ||
+        !Number.isFinite(atual) || atual < 0 ||
+        !Number.isFinite(ideal) || ideal < 0
+    ) {
+        return alert("Confira os dados do produto.");
+    }
+
+    if (banco.produtos.some(p => p.codigo === codigo)) {
+        return alert("Este código já está cadastrado.");
+    }
+
+    const produto = {
+        id: gerarId(),
+        codigo,
+        nome,
+        tipo: $("cadTipo").value,
+        unidade: $("cadUnidade").value,
+        local: $("cadLocal").value.trim(),
+        ideal,
+        atual,
+        entradas: 0,
+        saidas: 0,
+        retornos: 0
+    };
+
+    banco.produtos.push(produto);
+
+    if (atual > 0) {
+        registrarHistorico({
+            data: dataAtual(),
+            hora: horaAtual(),
+            operacao: "Saldo inicial",
+            obra: "Almoxarifado",
+            produto: nome,
+            quantidade: atual,
+            unidade: produto.unidade,
+            responsavel: "Cadastro inicial",
+            observacao: "Saldo cadastrado inicialmente"
+        });
+    }
+
+    if (confirmarAlteracao()) {
+        this.reset();
+        alert("Material cadastrado com sucesso!");
+    }
+});
+
+$("formObra").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const nome = $("cadObra").value.trim();
+    const cidade = $("cadCidade").value.trim();
+
+    if (!nome) return alert("Informe a obra.");
+
+    if (banco.obras.some(
+        o => o.nome.toLowerCase() === nome.toLowerCase()
+    )) {
+        return alert("Obra já cadastrada.");
+    }
+
+    banco.obras.push({
+        id: gerarId(),
+        nome,
+        cidade
+    });
+
+    if (confirmarAlteracao()) {
+        this.reset();
+        alert("Obra cadastrada!");
+    }
+});
+
+$("formSaida").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const produto = produtoPorId($("saidaProduto").value);
+    const obra = obraPorId($("saidaObra").value);
+    const qtd = Number($("saidaQtd").value);
+    const responsavel = $("saidaResponsavel").value.trim();
+
+    if (!produto || !obra || !responsavel) {
+        return alert("Preencha os campos obrigatórios.");
+    }
+
+    if (!Number.isFinite(qtd) || qtd <= 0) {
+        return alert("Quantidade inválida.");
+    }
+
+    if (qtd > produto.atual) {
+        return alert(
+            "Estoque insuficiente! Disponível: " +
+            numero(produto.atual) + " " + produto.unidade
+        );
+    }
+
+    const operacao = $("saidaOperacao").value;
+
+    banco.saidas.push({
+        id: gerarId(),
+        produtoId: produto.id,
+        obraId: obra.id,
+        produtoNome: produto.nome,
+        obraNome: obra.nome,
+        unidade: produto.unidade,
+        quantidade: qtd,
+        pendente: qtd,
+        responsavel,
+        data: $("saidaData").value,
+        hora: $("saidaHora").value,
+        operacao
+    });
+
+    produto.atual -= qtd;
+    produto.saidas += qtd;
+
+    registrarHistorico({
+        data: $("saidaData").value,
+        hora: $("saidaHora").value,
+        operacao,
+        obra: obra.nome,
+        produto: produto.nome,
+        quantidade: qtd,
+        unidade: produto.unidade,
+        responsavel,
+        observacao:
+            "Documento: " + $("saidaDocumento").value +
+            " | " + $("saidaObs").value
+    });
+
+    if (confirmarAlteracao()) {
+        this.reset();
+        preencherDatas();
+        alert("Saída registrada com sucesso!");
+    }
+});
+
+$("formRetorno").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const saida = banco.saidas.find(
+        s => s.id === $("retornoSaida").value
+    );
+
+    if (!saida) return alert("Selecione uma saída.");
+
+    const produto = produtoPorId(saida.produtoId);
+    const qtd = Number($("retornoQtd").value);
+    const responsavel = $("retornoResponsavel").value.trim();
+
+    if (!produto || !responsavel) {
+        return alert("Dados incompletos.");
+    }
+
+    if (
+        !Number.isFinite(qtd) ||
+        qtd <= 0 ||
+        qtd > saida.pendente
+    ) {
+        return alert(
+            "Quantidade inválida. Pendente: " +
+            numero(saida.pendente)
+        );
+    }
+
+    saida.pendente = Math.max(0, saida.pendente - qtd);
+    produto.atual += qtd;
+    produto.retornos += qtd;
+
+    const obra = obraPorId(saida.obraId);
+
+    registrarHistorico({
+        data: $("retornoData").value,
+        hora: $("retornoHora").value,
+        operacao: $("retornoOperacao").value,
+        obra: obra ? obra.nome : saida.obraNome,
+        produto: produto.nome,
+        quantidade: qtd,
+        unidade: produto.unidade,
+        responsavel,
+        observacao: $("retornoObs").value
+    });
+
+    if (confirmarAlteracao()) {
+        this.reset();
+        preencherDatas();
+        alert("Retorno registrado com sucesso!");
+    }
+});
+
+$("formEntrada").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const produto = produtoPorId($("entradaProduto").value);
+    const qtd = Number($("entradaQtd").value);
+    const operacao = $("entradaOperacao").value;
+    const responsavel = $("entradaResponsavel").value.trim();
+
+    if (!produto || !responsavel) {
+        return alert("Preencha os campos.");
+    }
+
+    if (
+        !Number.isFinite(qtd) ||
+        qtd < 0 ||
+        (operacao === "Entrada" && qtd === 0)
+    ) {
+        return alert("Quantidade inválida.");
+    }
+
+    const anterior = produto.atual;
+
+    if (operacao === "Entrada") {
+        produto.atual += qtd;
+        produto.entradas += qtd;
+    } else {
+        produto.atual = qtd;
+    }
+
+    registrarHistorico({
+        data: $("entradaData").value,
+        hora: $("entradaHora").value,
+        operacao,
+        obra: "Almoxarifado",
+        produto: produto.nome,
+        quantidade: qtd,
+        unidade: produto.unidade,
+        responsavel,
+        observacao:
+            operacao === "Ajuste de inventário"
+                ? "Saldo anterior: " + numero(anterior) +
+                  " | Saldo ajustado: " + numero(qtd)
+                : "Entrada de material"
+    });
+
+    if (confirmarAlteracao()) {
+        this.reset();
+        preencherDatas();
+        alert("Operação registrada!");
+    }
+});
+
+function baixarArquivo(nome, conteudo, tipo) {
+    const blob = new Blob([conteudo], {type: tipo});
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = nome;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function csv(nome, cabecalho, linhas) {
+    const conteudo = "\uFEFF" +
+        [cabecalho, ...linhas].map(linha =>
+            linha.map(valor =>
+                '"' + String(valor ?? "").replace(/"/g, '""') + '"'
+            ).join(";")
+        ).join("\r\n");
+
+    baixarArquivo(nome, conteudo, "text/csv;charset=utf-8");
+}
+
+function exportarEstoque() {
+    csv(
+        "estoque-nia.csv",
+        [
+            "Código", "Produto", "Tipo", "Unidade",
+            "Local", "Ideal", "Atual",
+            "Entradas", "Saídas", "Retornos"
+        ],
+        banco.produtos.map(p => [
+            p.codigo, p.nome, p.tipo, p.unidade,
+            p.local, p.ideal, p.atual,
+            p.entradas, p.saidas, p.retornos
+        ])
+    );
+}
+
+function exportarHistorico() {
+    csv(
+        "historico-nia.csv",
+        [
+            "Data", "Hora", "Operação", "Obra",
+            "Produto", "Quantidade", "Unidade",
+            "Responsável", "Observações"
+        ],
+        banco.historico.map(h => [
+            h.data, h.hora, h.operacao, h.obra,
+            h.produto, h.quantidade, h.unidade,
+            h.responsavel, h.observacao
+        ])
+    );
+}
+
+function baixarBackup() {
+    baixarArquivo(
+        "backup-nia-" + dataAtual() + ".json",
+        JSON.stringify(banco, null, 2),
+        "application/json"
+    );
+}
+
+async function restaurarBackup(evento) {
+    const arquivo = evento.target.files[0];
+    if (!arquivo) return;
+
+    try {
+        const dados = JSON.parse(await arquivo.text());
+
+        if (
+            !dados ||
+            !Array.isArray(dados.produtos) ||
+            !Array.isArray(dados.obras) ||
+            !Array.isArray(dados.saidas) ||
+            !Array.isArray(dados.historico)
+        ) {
+            throw new Error("Formato de backup inválido.");
+        }
+
+        if (!confirm(
+            "A restauração substituirá todos os registros atuais. Continuar?"
+        )) return;
+
+        banco = dados;
+
+        if (confirmarAlteracao()) {
+            alert("Backup restaurado com sucesso!");
+        }
+    } catch (erro) {
+        alert("Erro ao restaurar: " + erro.message);
+    } finally {
+        evento.target.value = "";
+    }
+}
+
+preencherDatas();
+renderizar();
+</script>
+
+</body>
+</html>
